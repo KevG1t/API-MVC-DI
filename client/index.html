@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Probar API Rest</title>
+  <style>
+    article {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    img {
+      height: auto;
+      width: 320px;
+      max-width: 100%;
+    }
+
+    form{
+      display: flex;
+      flex-direction: column;
+      width: 400px;
+      margin: 0 auto;
+      margin-bottom: 20px;
+      gap: 10px;
+    }
+
+    fieldset{
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    button{
+      width: 100px;
+      height: 35px;
+      padding: 10px 15px;
+      align-self: center;
+      border-radius: 999px;
+    }
+
+    input{
+      outline: none;
+      height: 34px;
+      border: 1px solid black;
+      border-radius: 9999px;
+      padding: 5px 15px;
+    }
+  </style>
+  <script type="module">
+    fetch('http://localhost:3000/users')
+      .then(res => res.json())
+      .then(users => {
+        const html = users.map(user => {
+          return `
+            <article data-id="${user.id}">
+              <h2>${user.name}</h2>
+              <p>${user.password}</p>
+              <p>${user.email}</p>
+
+              <button>Eliminar</button>
+            </article>
+          `
+        }).join('')
+
+        document.querySelector('.list').innerHTML = html
+
+        document.addEventListener('click', e => {
+          if (e.target.matches('button')) {
+            const article = e.target.closest('article')
+            const id = article.dataset.id
+
+            fetch(`http://localhost:3000/users/${id}`, {
+              method: 'DELETE'
+            })
+              .then(res => {
+                if (res.ok) {
+                  article.remove()
+                }
+              })
+            }
+          
+        })
+      })
+  </script>
+</head>
+<body>
+  <main>
+    <h1>Crear user</h1>
+    <form>
+        <fieldset>
+            <label for="name">name</label>
+            <input type="text" name="name" id="name" required placeholder="name">
+    
+            <label for="password">password</label>
+            <input type="password" name="password" id="password" required placeholder="password">
+    
+            <label for="email">email</label>
+            <input type="email" name="email" id="email" required placeholder="email">
+        </fieldset>
+
+        <button>crear</button>
+    </form>
+
+    <section class="list">
+
+    </section>
+  </main>
+  <script>
+    
+    const form = document.querySelector('form')
+
+    const crearUser = (e) => {
+        e.preventDefault();
+  
+        const data = new FormData(form)
+        const name = data.get('name');
+        const password = data.get('password');
+        const email = data.get('email');
+
+        fetch('http://localhost:3000/users/',{
+            method: 'POST',
+            headers:{
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              name,
+              password,
+              email
+            })
+        }).then(res => {
+            if (!res.ok) throw new Error('fail!');
+
+           return res.json()
+        }).then(result => {
+          const html = `
+            <article data-id="${result.insertId}">
+              <h2>${name}</h2>
+              <p>${password}</p>
+              <p>${email}</p>
+
+              <button>Eliminar</button>
+            </article>
+            `
+            document.querySelector('.list').insertAdjacentHTML('afterend',html)
+          
+        }).catch(error => console.error(error))
+        
+    }
+    form.addEventListener('submit',crearUser)
+  </script>
+</body>
+</html>
